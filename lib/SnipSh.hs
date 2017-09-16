@@ -1,21 +1,63 @@
-{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
-module SnipSh.APIClient
-    ( Snippet(..)
-    , SnippetIndex
-    , getSnippetIndex
-    , getSnippetById
-    ) where
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+module SnipSh where
 
-import Network.HTTP.Req
+import Prelude hiding(id) -- meh
+
 import SnipSh.Config
-import Data.Text.Encoding
+
 import Data.Aeson
 import Data.Text
-import GHC.Generics
+import Data.Text.Encoding
+
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
 
-import Prelude hiding(id) -- meh
+import GHC.Generics
+
+import Network.HTTP.Req
+
+import Control.Monad.Reader
+import Control.Monad.Except
+
+data SnipShError = SnipShError
+    { reason :: String
+    } deriving (Show)
+
+type SnipSh = ReaderT Config (ExceptT SnipShError IO)
+
+instance MonadHttp SnipSh where
+    handleHttpException = throwError . SnipShError . show
+
+runSnipSh :: SnipSh a -> IO (Either SnipShError a)
+runSnipSh snip = do
+    defaultConf <- readDefaultConfig
+    case defaultConf of
+        Left err -> return $ Left (SnipShError err)
+        Right conf -> runExceptT $ runReaderT snip conf
+
+runSnipSh' :: Config -> SnipSh a -> IO (Either SnipShError a)
+runSnipSh' c snip = runExceptT $ runReaderT snip c
+
+{- * Config Section -}
+
+defaultConfigFile :: String
+defaultConfigFile = "config.json"
+
+readDefaultConfig :: IO (Either String Config)
+readDefaultConfig = readConfig defaultConfigFile
+
+getIt :: Int -> SnipSh Snippet
+getIt id = do
+    c <- ask
+    getSnippetById c id
+
+getAll :: SnipSh SnippetIndex
+getAll = do
+    c <- ask
+    getSnippetIndex c
 
 data Snippet = Snippet
     { id :: Int
