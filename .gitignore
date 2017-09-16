@@ -1,0 +1,9 @@
+# cabal stuff
+dist/build/
+dist/dist-sandbox*
+dist/package.conf.inplace
+dist/setup-config
+.cabal-sandbox/
+cabal.sandbox.config
+# config file
+config.json
