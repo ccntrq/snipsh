@@ -1,5 +1,5 @@
 {
-    "api_token": "secret_api_token",
-    "api_url": "https://gitlab.example.com/api/v4/",
+    "apiToken": "secret_api_token",
+    "apiUrl": "https://gitlab.example.com/api/v4/",
     "editor": "vim"
 }
