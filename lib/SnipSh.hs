@@ -18,6 +18,7 @@ import qualified Data.ByteString.Char8 as BC
 import GHC.Generics
 
 import Network.HTTP.Req
+import Data.Proxy
 
 import Control.Monad.Reader
 import Control.Monad.Except
@@ -55,9 +56,16 @@ getIt id = do
     liftIO $ putStrLn "fetching snippet. this might take a while..."
     getSnippetById c id
 
+getRaw :: Int -> SnipSh B.ByteString
+getRaw id = do
+    c <- ask
+    liftIO $ putStrLn "fetching snippet raw content. this might take a while..."
+    getSnippetRaw c id
+
 getAll :: SnipSh SnippetIndex
 getAll = do
     c <- ask
+    liftIO $ putStrLn "fetching snippet index. this might take a while..."
     getSnippetIndex c
 
 data Snippet = Snippet
@@ -79,23 +87,36 @@ instance ToJSON Snippet
 
 getSnippetIndex :: MonadHttp m => Config -> m (SnippetIndex)
 getSnippetIndex config = do
-    res <- performGetRequest config "snippets"
+    res <- performJsonGetRequest config "snippets"
     return (responseBody res)
 
 getSnippetById :: MonadHttp m => Config -> Int -> m (Snippet)
 getSnippetById config id = do
-    res <- performGetRequest config $ B.append "snippets/" (BC.pack (show id))
+    res <- performJsonGetRequest config $ B.append "snippets/" (BC.pack (show id))
+    return (responseBody res)
+
+getSnippetRaw :: MonadHttp m => Config -> Int -> m (B.ByteString)
+getSnippetRaw config id = do
+    res <- performBsGetRequest config $ B.append (B.append "snippets/" (BC.pack (show id))) "/raw" -- urgh
     return (responseBody res)
 
 {- * Low level plumbing -}
 
-performGetRequest :: (FromJSON a, MonadHttp m) =>
-                     Config -> B.ByteString -> m (JsonResponse a)
-performGetRequest config route =
+performJsonGetRequest :: (FromJSON a, MonadHttp m) =>
+                         Config -> B.ByteString -> m (JsonResponse a)
+performJsonGetRequest = performGetRequest jsonResponse
+
+performBsGetRequest :: MonadHttp m =>
+                       Config -> B.ByteString -> m (BsResponse)
+performBsGetRequest = performGetRequest bsResponse
+
+performGetRequest :: (HttpResponse response, MonadHttp m) =>
+                     Proxy response -> Config -> B.ByteString -> m response
+performGetRequest responseProxy config route =
     let (urlScheme,opts) = mkUrlScheme config route
     in
       req GET urlScheme
-      NoReqBody jsonResponse
+      NoReqBody responseProxy
       $ mappend (mkTokenHeader config) opts
 
 mkUrlScheme config route =
