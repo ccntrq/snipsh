@@ -52,6 +52,7 @@ readDefaultConfig = readConfig defaultConfigFile
 getIt :: Int -> SnipSh Snippet
 getIt id = do
     c <- ask
+    liftIO $ putStrLn "fetching snippet. this might take a while..."
     getSnippetById c id
 
 getAll :: SnipSh SnippetIndex
@@ -64,7 +65,7 @@ data Snippet = Snippet
     , title :: Text
     , file_name :: Text
     , description :: Text
-    , author :: Value
+    , author :: Value -- ^ This is a JSON object
     , updated_at :: Text
     , created_at :: Text
     , web_url :: Text
@@ -74,6 +75,7 @@ data Snippet = Snippet
 type SnippetIndex = [Snippet]
 
 instance FromJSON Snippet
+instance ToJSON Snippet
 
 getSnippetIndex :: MonadHttp m => Config -> m (SnippetIndex)
 getSnippetIndex config = do
