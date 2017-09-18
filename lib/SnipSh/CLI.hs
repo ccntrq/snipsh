@@ -4,26 +4,61 @@ import Prelude hiding(id) -- meh
 
 import SnipSh
 
+import System.IO
+import System.Exit
 import qualified Data.Text as T
+import qualified Data.ByteString.Char8 as BC
+
+import Control.Monad.IO.Class
 
 entry :: IO ()
 entry = do
-    putStrLn "Welcome to the snipSh! v0.0.1"
-    snip <- runSnipSh $ getIt 2
-    case snip of 
-        Left err -> error $ show err
-        Right snip -> do 
-            printRow $ applyPaddings getHeaderNames
-            printRow $ applyPaddings $ mkRow snip
-            putStrLn ""
-            putStrLn ""
-            print snip
+    putStrLn "Welcome to the snipsh!"
+    _ <- runSnipSh mainLoop
+    putStrLn "Bye." -- unreachable
+
+version = "0.0.1"
+prompt = "snipsh v" ++ version ++ " >>="
+help =  "Supported Commands are:\n" ++
+        "list, get, help, exit"
+
+mainLoop :: SnipSh ()
+mainLoop = do
+    liftIO $ putStrLn prompt'
+    liftIO $ putStr ">"
+    liftIO $ hFlush stdout
+    cmd <- liftIO getLine
+    dispatch cmd
+    mainLoop
+  where prompt' = prompt ++ " please enter a command:"
+
+dispatch :: String -> SnipSh ()
+dispatch "list" = getAll >>= printIndex
+dispatch "get" = do
+    liftIO $ putStrLn (prompt ++ " please enter the snippet id:")
+    liftIO $ putStr ">"
+    liftIO $ hFlush stdout
+    idStr <- liftIO getLine
+    let id :: Int
+        id = read idStr
+    getIt id >>= printSnip
+    liftIO $ putStrLn "Content:"
+    getRaw id >>= (liftIO . putStrLn . BC.unpack)
+dispatch "exit" = liftIO $ exitSuccess
+dispatch _ = liftIO $ putStrLn help
+
+printIndex index = do
+    liftIO (printRow $ applyPaddings getHeaderNames)
+    mapM_ (liftIO . printRow) (mkRows index)
+
+printSnip snip = do
+    liftIO $ printRow $ applyPaddings getHeaderNames
+    liftIO $ printRow $ applyPaddings $ mkRow snip
 
 printRow row  = do
     mapM_ putStr row
     putStrLn ""
-            
-            
+
 mkRows :: [Snippet] -> [[String]]
 mkRows = map (applyPaddings . mkRow)
 
@@ -43,8 +78,8 @@ printValueLookup =
 
 removeNewlines :: String -> String
 removeNewlines str = foldl (removeIt) "" str
-  where 
-    removeIt acc '\r' = acc -- remove carriage return 
+  where
+    removeIt acc '\r' = acc -- remove carriage return
     removeIt acc '\n' = acc ++ " " -- add whitespace instead of newline
     removeIt acc x = acc ++ [x] -- keepIt
 
