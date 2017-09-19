@@ -9,10 +9,11 @@
   - [x] get snippet index
   - [x] get snippet
 - [ ] cli util
-  - [ ] show snippets
-  - [ ] choose/convenient download of snippets
-  - [ ] edit snippet in editor
-  - [ ] exec snippet
+  - [x] show snippets
+  - [x] edit snippet in editor
+  - [x] exec snippet
+  - [ ] argparser
+- [ ] cleanup
 
 ## vx.x.x
 
@@ -20,3 +21,7 @@
   - [ ] create snippet
   - [ ] update snippet
 - [ ] add local storage option
+
+## Misc
+
+-  [ ] add script to 'fix' lineendings in all snippets
