@@ -11,6 +11,7 @@ import SnipSh.Config
 import Data.Aeson
 import Data.Text
 import Data.Text.Encoding
+import Data.Char
 
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
@@ -63,7 +64,8 @@ getRaw :: Int -> SnipSh B.ByteString
 getRaw id = do
     c <- ask
     liftIO $ putStrLn "fetching snippet raw content. this might take a while..."
-    getSnippetRaw c id
+    content <- getSnippetRaw c id
+    return (B.filter ((/=) (fromIntegral (ord '\r'))) content)
 
 getAll :: SnipSh SnippetIndex
 getAll = do
