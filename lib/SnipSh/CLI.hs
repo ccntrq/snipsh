@@ -6,6 +6,8 @@ import SnipSh
 
 import System.IO
 import System.Exit
+import System.Process
+import System.IO.Temp -- withSystemTempFile
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BC
 
@@ -20,7 +22,7 @@ entry = do
 version = "0.0.1"
 prompt = "snipsh v" ++ version ++ " >>="
 help =  "Supported Commands are:\n" ++
-        "list, get, help, exit"
+        "list, get, help, exec exit"
 
 mainLoop :: SnipSh ()
 mainLoop = do
@@ -44,8 +46,31 @@ dispatch "get" = do
     getIt id >>= printSnip
     liftIO $ putStrLn "Content:"
     getRaw id >>= (liftIO . putStrLn . BC.unpack)
+dispatch "exec" = do
+    liftIO $ putStrLn (prompt ++ " please enter the snippet id:")
+    liftIO $ putStr ">"
+    liftIO $ hFlush stdout
+    idStr <- liftIO getLine
+    let id :: Int
+        id = read idStr
+    content <- getRaw id
+    editor <- getEditor
+    res <- liftIO $ withSystemTempFile ".sh" (\name fh -> do
+               hPutStr fh (BC.unpack content)
+               hClose fh
+               spawnEditor (T.unpack editor) name)
+    liftIO $ print res
+    _ <- liftIO $ createProcess (shell res)
+    return ()
 dispatch "exit" = liftIO $ exitSuccess
 dispatch _ = liftIO $ putStrLn help
+
+spawnEditor :: String -> String -> IO String
+spawnEditor e file = do
+    pid <- spawnProcess e [file]
+    waitForProcess pid
+    text <- readFile file
+    return text
 
 printIndex index = do
     liftIO (printRow $ applyPaddings getHeaderNames)
