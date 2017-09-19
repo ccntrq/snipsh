@@ -50,6 +50,9 @@ defaultConfigFile = "config.json"
 readDefaultConfig :: IO (Either String Config)
 readDefaultConfig = readConfig defaultConfigFile
 
+getEditor :: SnipSh Text
+getEditor = ask >>= (return . editor)
+
 getIt :: Int -> SnipSh Snippet
 getIt id = do
     c <- ask
