@@ -26,6 +26,7 @@ library
                      , process
                      , temporary
                      , transformers
+                     , cmdargs
   default-language:    Haskell2010
 
 executable snipsh

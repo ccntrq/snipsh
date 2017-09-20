@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 module SnipSh.CLI where
 
 import Prelude hiding(id) -- meh
@@ -7,63 +8,57 @@ import SnipSh
 import System.IO
 import System.Exit
 import System.Process
-import System.IO.Temp -- withSystemTempFile
+import System.IO.Temp
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BC
 
 import Control.Monad.IO.Class
 
+import System.Console.CmdArgs
+
 entry :: IO ()
 entry = do
-    putStrLn "Welcome to the snipsh!"
-    _ <- runSnipSh mainLoop
-    putStrLn "Bye." -- unreachable
+    cmd <- cmdArgs (modes [list,get,exec] &= help "A convenient GitLab snippet api helper" &= program "snipsh" &= summary prompt)
+    _ <- runSnipSh $ dispatch cmd
+    return ()
 
+dispatch :: Command -> SnipSh ()
+dispatch List = listSnips
+dispatch (Get sID) = getSnip sID
+dispatch (Exec sID) = execSnip sID
+
+data Command
+    = List
+    | Get { snip :: Int }
+    | Exec { snip :: Int }
+    deriving (Show, Data, Typeable)
+
+-- i find this weird. shouldn't both be argPos 0?
+-- they are used in different modes...
+getFlags = def &= argPos 0
+execFlags = def &= argPos 1
+
+list = List &= help "list all snippets"
+get = Get {snip = getFlags} &= help "get a snippet"
+exec = Exec {snip = execFlags} &= help "execute a snippet"
 version = "0.0.1"
-prompt = "snipsh v" ++ version ++ " >>="
-help =  "Supported Commands are:\n" ++
-        "list, get, help, exec exit"
+prompt = "snipsh v" ++ version ++ " =<<"
 
-mainLoop :: SnipSh ()
-mainLoop = do
-    liftIO $ putStrLn prompt'
-    liftIO $ putStr ">"
-    liftIO $ hFlush stdout
-    cmd <- liftIO getLine
-    dispatch cmd
-    mainLoop
-  where prompt' = prompt ++ " please enter a command:"
-
-dispatch :: String -> SnipSh ()
-dispatch "list" = getAll >>= printIndex
-dispatch "get" = do
-    liftIO $ putStrLn (prompt ++ " please enter the snippet id:")
-    liftIO $ putStr ">"
-    liftIO $ hFlush stdout
-    idStr <- liftIO getLine
-    let id :: Int
-        id = read idStr
-    getIt id >>= printSnip
+listSnips = getAll >>= printIndex
+getSnip snipId = do
+    getIt snipId >>= printSnip
     liftIO $ putStrLn "Content:"
-    getRaw id >>= (liftIO . putStrLn . BC.unpack)
-dispatch "exec" = do
-    liftIO $ putStrLn (prompt ++ " please enter the snippet id:")
-    liftIO $ putStr ">"
-    liftIO $ hFlush stdout
-    idStr <- liftIO getLine
-    let id :: Int
-        id = read idStr
-    content <- getRaw id
+    getRaw snipId >>= (liftIO . putStrLn . BC.unpack)
+
+execSnip snipId = do
+    content <- getRaw snipId
     editor <- getEditor
     res <- liftIO $ withSystemTempFile ".sh" (\name fh -> do
                hPutStr fh (BC.unpack content)
                hClose fh
                spawnEditor (T.unpack editor) name)
-    liftIO $ print res
     _ <- liftIO $ createProcess (shell res)
     return ()
-dispatch "exit" = liftIO $ exitSuccess
-dispatch _ = liftIO $ putStrLn help
 
 spawnEditor :: String -> String -> IO String
 spawnEditor e file = do
