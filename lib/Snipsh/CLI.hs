@@ -41,7 +41,7 @@ execFlags = def &= argPos 1
 list = List &= help "list all snippets"
 get = Get {snip = getFlags} &= help "get a snippet"
 exec = Exec {snip = execFlags} &= help "execute a snippet"
-version = "0.0.1"
+version = "0.0.9"
 prompt = "snipsh v" ++ version ++ " =<<"
 
 listSnips = getIndex >>= printIndex

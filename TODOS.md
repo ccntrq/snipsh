@@ -13,7 +13,7 @@
   - [x] edit snippet in editor
   - [x] exec snippet
   - [x] argparser
-- [ ] cleanup
+- [-] cleanup [WIP]
 
 ## vx.x.x
 
