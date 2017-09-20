@@ -18,7 +18,7 @@ import System.Console.CmdArgs
 
 entry :: IO ()
 entry = do
-    cmd <- cmdArgs (modes [list,get,exec] &= help "A convenient clit util for the GitLab snippet API" &= program "snipsh" &= summary prompt)
+    cmd <- cmdArgs (modes [list,get,exec] &= help "A convenient CLI util for the GitLab snippet API" &= program "snipsh" &= summary prompt)
     _ <- runSnipsh $ dispatch cmd
     return ()
 

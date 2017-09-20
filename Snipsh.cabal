@@ -1,6 +1,6 @@
 name:                Snipsh
 version:             0.0.1
-synopsis:            A convenient clit util for the GitLab snippet API
+synopsis:            A convenient CLI util for the GitLab snippet API
 homepage:            https://github.com/ccntrq/snipSh#readme
 license:             MIT
 license-file:        LICENSE.md
