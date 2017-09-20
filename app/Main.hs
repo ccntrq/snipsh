@@ -1,6 +1,6 @@
 module Main where
 
-import SnipSh.CLI
+import Snipsh.CLI
 
 main :: IO ()
 main = entry

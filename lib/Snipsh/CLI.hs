@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveDataTypeable #-}
-module SnipSh.CLI where
+module Snipsh.CLI where
 
 import Prelude hiding(id) -- meh
 
-import SnipSh
+import Snipsh
 
 import System.IO
 import System.Exit
@@ -18,11 +18,11 @@ import System.Console.CmdArgs
 
 entry :: IO ()
 entry = do
-    cmd <- cmdArgs (modes [list,get,exec] &= help "A convenient GitLab snippet api helper" &= program "snipsh" &= summary prompt)
-    _ <- runSnipSh $ dispatch cmd
+    cmd <- cmdArgs (modes [list,get,exec] &= help "A convenient clit util for the GitLab snippet API" &= program "snipsh" &= summary prompt)
+    _ <- runSnipsh $ dispatch cmd
     return ()
 
-dispatch :: Command -> SnipSh ()
+dispatch :: Command -> Snipsh ()
 dispatch List = listSnips
 dispatch (Get sID) = getSnip sID
 dispatch (Exec sID) = execSnip sID
@@ -44,7 +44,7 @@ exec = Exec {snip = execFlags} &= help "execute a snippet"
 version = "0.0.1"
 prompt = "snipsh v" ++ version ++ " =<<"
 
-listSnips = getAll >>= printIndex
+listSnips = getIndex >>= printIndex
 getSnip snipId = do
     getIt snipId >>= printSnip
     liftIO $ putStrLn "Content:"
