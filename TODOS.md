@@ -8,11 +8,11 @@
 - [x] apiclient
   - [x] get snippet index
   - [x] get snippet
-- [ ] cli util
+- [x] cli util
   - [x] show snippets
   - [x] edit snippet in editor
   - [x] exec snippet
-  - [ ] argparser
+  - [x] argparser
 - [ ] cleanup
 
 ## vx.x.x
