@@ -63,26 +63,39 @@ type SnippetIndex = [Snippet]
 instance FromJSON Snippet
 instance ToJSON Snippet
 
+{- Snipsh Config Helper -}
 getEditor :: Snipsh Text
 getEditor = ask >>= (return . editor)
 
+{- Snipsh Config Helper -}
+
+-- | retrieve personal snippet index
 getIndex :: Snipsh SnippetIndex
 getIndex = do
     (url,opts) <- prepareRequest "snippets/"
     res <- performJsonGetRequest url opts
     return (responseBody res)
 
+-- | retrieve a snippet
 getIt :: Int -> Snipsh Snippet
-getIt id = do
-    (url,opts) <- prepareRequest (B.append "snippets/" (BC.pack (show id)))
+getIt snipid = do
+    (url,opts) <- prepareRequest (B.append "snippets/" (BC.pack (show snipid)))
     res <- performJsonGetRequest url opts
     return (responseBody res)
 
+-- | retrieve the raw content of a snippet
 getRaw :: Int -> Snipsh B.ByteString
-getRaw id = do
-    (url,opts) <- prepareRequest (B.append (B.append "snippets/" (BC.pack (show id))) "/raw")
+getRaw snipid = do
+    (url,opts) <- prepareRequest (B.append (B.append "snippets/" (BC.pack (show snipid))) "/raw")
     res <- performBsGetRequest url opts
-    return (responseBody res)
+    return $ removeCarriageReturn (responseBody res)
+
+-- | get rid of that crap...
+removeCarriageReturn :: B.ByteString -> B.ByteString
+removeCarriageReturn = B.filter carriageReturn
+  where carriageReturn = ((/=) (fromIntegral (ord '\r')))
+
+{- * Request preperation -}
 
 prepareRequest :: B.ByteString -> Snipsh (Url 'Https, Option scheme)
 prepareRequest route = do
@@ -103,6 +116,8 @@ mkUrlScheme route = do
       Just (url,opts)-> return (url,opts)
       Nothing -> throwError $ SnipshError "couldn't parse url"
 
+{- * Generic low level helper for 'req' -}
+
 performJsonGetRequest :: (FromJSON a, MonadHttp m) =>
                          Url scheme -> Option scheme -> m (JsonResponse a)
 performJsonGetRequest = performGetRequest jsonResponse
@@ -114,6 +129,3 @@ performBsGetRequest = performGetRequest bsResponse
 performGetRequest :: (HttpResponse response, MonadHttp m) =>
                      Proxy response -> Url scheme -> Option scheme -> m response
 performGetRequest responseProxy urlScheme opts = req GET urlScheme NoReqBody responseProxy opts
-
-
-
