@@ -1,12 +1,12 @@
 name:                Snipsh
-version:             0.0.9
+version:             0.1.0
 synopsis:            A convenient CLI util for the GitLab snippet API
-homepage:            https://github.com/ccntrq/snipSh#readme
+homepage:            https://github.com/ccntrq/snipsh#readme
 license:             MIT
 license-file:        LICENSE.md
 author:              Alex 'ccntrq' Pankoff
 copyright:           2017 Alexander Pankoff
-category:            Interpreters
+category:            Utility
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10

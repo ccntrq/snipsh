@@ -13,13 +13,14 @@
   - [x] edit snippet in editor
   - [x] exec snippet
   - [x] argparser
-- [-] cleanup [WIP]
+- [x] cleanup
 
 ## vx.x.x
 
 - [ ] extend apiclient
   - [ ] create snippet
   - [ ] update snippet
+- [ ] improve the pretty printer or use a quality library
 - [ ] add local storage option
 
 ## Misc

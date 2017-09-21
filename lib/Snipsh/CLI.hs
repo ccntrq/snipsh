@@ -25,7 +25,7 @@ entry = do
 {- * Command line argument handling -}
 
 version :: String
-version = "0.0.9"
+version = "0.1.0"
 
 prompt :: String
 prompt = "snipsh v" ++ version ++ " =<<"
